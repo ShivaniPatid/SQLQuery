@@ -385,3 +385,76 @@ END TRY
 BEGIN CATCH  
     EXECUTE GetErrorInfo;  
 END CATCH;  
+
+
+--------Trigger----------
+--A trigger is a special type of stored procedure that automatically runs when an event occurs in the database
+-- server. DML triggers run when a user tries to modify data through a data manipulation language (DML) event. 
+-- DML events are INSERT, UPDATE, or DELETE statements on a table or view. 
+
+-- Types of SQL Server Triggers
+-- We can categorize the triggers in SQL Server in mainly three types:
+
+-- 1. Data Definition Language (DDL) Triggers
+-- 2. Data Manipulation Language (DML) Triggers
+-- 3. Logon Triggers
+
+CREATE TABLE Employee  
+(  
+  Id INT PRIMARY KEY,  
+  Name VARCHAR(45),  
+  Salary INT,  
+  Gender VARCHAR(12),  
+  DepartmentId INT  
+)  
+
+INSERT INTO Employee VALUES (1,'Steffan', 82000, 'Male', 3),  
+(2,'Amelie', 52000, 'Female', 2),  
+(3,'Antonio', 25000, 'male', 1),  
+(4,'Marco', 47000, 'Male', 2),  
+(5,'Eliana', 46000, 'Female', 3)  
+
+select * from Employee
+
+CREATE TABLE Employee_Audit_Test  
+(    
+Id int IDENTITY,   
+Audit_Action text   
+)  
+
+
+--create a trigger that stores transaction records of each insert operation
+
+CREATE TRIGGER trInsertEmployee   
+ON Employee  
+FOR INSERT  
+AS  
+BEGIN  
+  Declare @Id int  
+  SELECT @Id = Id from inserted  
+  INSERT INTO Employee_Audit_Test  
+  VALUES ('New employee with Id = ' + CAST(@Id AS VARCHAR(10)) + ' is added at ' + CAST(Getdate() AS VARCHAR(22)))  
+END  
+
+INSERT INTO Employee VALUES (6,'Peter', 62000, 'Male', 3)  
+
+select * from Employee_Audit_Test
+
+
+---create another trigger to store transaction records of each delete operation
+
+CREATE TRIGGER trDeleteEmployee   
+ON Employee  
+FOR DELETE  
+AS  
+BEGIN  
+  Declare @Id int  
+  SELECT @Id = Id from deleted  
+  INSERT INTO Employee_Audit_Test  
+  VALUES ('An existing employee with Id = ' + CAST(@Id AS VARCHAR(10)) + ' is deleted at ' + CAST(Getdate() AS VARCHAR(22)))  
+END  
+
+DELETE FROM Employee WHERE Id = 2;  
+
+
+select * from Employee_Audit_Test
